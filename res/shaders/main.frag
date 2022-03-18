@@ -10,8 +10,8 @@ uniform float imgPlaneZ;
 // Matrix for transforming camera location and camera ray directions
 uniform mat4 cameraMat;
 
-uniform float rayStepSize = 0.1;
-uniform uint maxSteps = 100;
+uniform float rayStepSize = 0.01;
+uniform uint maxSteps = 300;
 
 struct Metaball {
     vec3 chargePos;
@@ -24,6 +24,7 @@ struct Metaball {
 const int nMetaballs = <->n_metaballs!<->; 
 uniform Metaball metaballs[nMetaballs];
 uniform float threshold;
+uniform float maxCharge;
 
 float metaballFalloff(Metaball metaball, vec3 point){
     float dist = length(point-metaball.chargePos);
@@ -36,6 +37,14 @@ float getFieldStrength(vec3 point){
         strength += metaballFalloff(metaballs[i], point);
     }
     return strength;
+}
+
+vec3 getNormal(vec3 point){
+    vec3 normal = vec3(0.0);
+    for(uint i= 0; i < nMetaballs; ++i){
+        normal += normalize(point - metaballs[i].chargePos) * metaballFalloff(metaballs[i], point);
+    }
+    return normalize(normal);
 }
 
 struct Ray {
@@ -64,14 +73,17 @@ void main() {
     
     Ray camRay = getCameraRay(vec3(uv, imgPlaneZ), cameraMat);
 
-    vec3 tmpColor = vec3(0.0);
-    for (int i = 0; i < maxSteps; i++){
+    vec3 tmpColor = vec3(0.5, 0.5, 1.0);
+    uint i = 0;
+    while (i < maxSteps){
         vec3 testPoint = camRay.orig + camRay.dir * camRay.length;
         if (getFieldStrength(testPoint) >= threshold){
-            tmpColor = vec3(getFieldStrength(testPoint));
-            break;
+            vec3 normal = getNormal(testPoint);
+            tmpColor = normal/2.0 + vec3(.5);
+            i = maxSteps;
         }
         camRay.length += rayStepSize;
+        i++;
     }
 
     color = vec4(tmpColor, 1.0);

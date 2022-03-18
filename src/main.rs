@@ -32,13 +32,18 @@ fn main() {
         threshold: 10.0,
         metaballs: vec![
             metaballs::Metaball {
-                charge_pos: [0.0, 0.0, 2.0],
+                charge_pos: [0.0, 0.0, 0.0],
+                strength: 0.3,
+                color: [1.0, 0.0, 0.0, 1.0],
+            },
+            metaballs::Metaball {
+                charge_pos: [0.0, 0.0, 0.0],
                 strength: 0.3,
                 color: [1.0, 0.0, 0.0, 1.0],
             },
             metaballs::Metaball {
                 charge_pos: [0.0, 0.0, 2.0],
-                strength: 0.3,
+                strength: 0.5,
                 color: [1.0, 0.0, 0.0, 1.0],
             }
         ]
@@ -56,12 +61,11 @@ fn main() {
     event_loop.run(move |ev, _, control_flow |{
         use glium::Surface;
 
-        program_uniforms.screen_width = display.get_framebuffer_dimensions().0;
-        program_uniforms.screen_height = display.get_framebuffer_dimensions().1;
-
         program_uniforms.metaballs[0].charge_pos[0] = (start_time.elapsed().as_secs_f32() * 1.2).sin();
         program_uniforms.metaballs[0].charge_pos[2] = (start_time.elapsed().as_secs_f32() * 1.2).cos() + 2.0;
-        program_uniforms.metaballs[1].charge_pos[1] = start_time.elapsed().as_secs_f32().cos();
+
+        program_uniforms.metaballs[1].charge_pos[1] = (start_time.elapsed().as_secs_f32() * 1.0).cos()/2.0;
+        program_uniforms.metaballs[1].charge_pos[2] = (start_time.elapsed().as_secs_f32() * 1.0).sin()/2.0 + 2.0;
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
