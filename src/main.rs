@@ -50,7 +50,7 @@ fn main() {
         ],
         point_lights: vec![
             lights::PointLight {
-                pos: [-4.0, 5.0, 2.5],
+                pos: [0.0, 3.0, 0.0],
                 color: [1.0, 1.0, 1.0],
                 intensity: 1.0,
             }

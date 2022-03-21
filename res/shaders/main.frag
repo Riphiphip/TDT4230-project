@@ -106,29 +106,25 @@ const float specularCoef = 0.5;
 
 //Calculate local illumination using Phong model.
 vec3 getLocalIllumination(vec3 point, vec3 normal, float fieldStrength){
-    vec3 color = ambientLight * ambientCoef;
 
     vec4 cameraPos = cameraMat * vec4(vec3(0.0), 1.0);
     vec3 viewDir = normalize(vec3(cameraPos)-point);
 
+    vec3 color = ambientLight * ambientCoef;
+
     for (int i =0; i < nPointLights; ++i){
         PointLight light = pointLights[i];
+        vec3 lightDir = normalize(light.pos - point);
         // Check if point is in shadow
         Ray shadowRay;
-        shadowRay.dir = normalize(light.pos - point);
+        shadowRay.dir = lightDir;
         shadowRay.orig = point;
         shadowRay.length = shadowRayStepSize;
         float rejectFactor = float(castShadowRay(shadowRay));
-        vec3 lightDir = shadowRay.dir;
-        float distToLight = length(light.pos - point);
 
-        float attenuation = 1.0/(la + lb * distToLight + lc * pow(distToLight, 2));
-
-
-        //Diffuse
-        vec3 diffuseCol = getColor(point, fieldStrength);
-        // color += diffuseCoef * max(0.0, dot(normal, lightDir)) * diffuseCol * light.intensity * attenuation * rejectFactor;
-        color += diffuseCol * diffuseCoef * rejectFactor * attenuation * light.intensity;
+        // Diffuse
+        color += max(0.0, dot(normal, lightDir)) * getColor(point, fieldStrength);
+        // Specular
     }
     return color;
 }
