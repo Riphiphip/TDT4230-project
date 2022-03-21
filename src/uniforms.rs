@@ -25,5 +25,11 @@ impl glium::uniforms::Uniforms for Uniforms {
             f(&format!("metaballs[{}].strength", i), glium::uniforms::UniformValue::Float(self.metaballs[i].strength));
             f(&format!("metaballs[{}].color", i), glium::uniforms::UniformValue::Vec4(self.metaballs[i].color));
         }
+
+        for i in 0..self.point_lights.len(){
+            f(&format!("pointLights[{}].pos",i), glium::uniforms::UniformValue::Vec3(self.point_lights[i].pos));
+            f(&format!("pointLights[{}].color",i), glium::uniforms::UniformValue::Vec3(self.point_lights[i].color));
+            f(&format!("pointLights[{}].intensity",i), glium::uniforms::UniformValue::Float(self.point_lights[i].intensity));
+        }
     }
 }
