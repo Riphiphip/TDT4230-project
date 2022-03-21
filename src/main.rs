@@ -37,7 +37,7 @@ fn main() {
                 strength: 0.3,
                 material: metaballs::Material {
                     color: [1.0, 0.0, 0.0],
-                    roughness: 1.0,
+                    roughness: 2.0,
                 },
             },
             metaballs::Metaball {
@@ -53,7 +53,7 @@ fn main() {
                 strength: 0.5,
                 material: metaballs::Material {
                     color: [0.0, 0.0, 1.0],
-                    roughness: 1.0,
+                    roughness: 0.001,
                 },
             }
         ],

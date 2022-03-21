@@ -138,8 +138,11 @@ vec3 getLocalIllumination(vec3 point, float fieldStrength){
         float rejectFactor = float(castShadowRay(shadowRay));
 
         // Diffuse
-        color += max(0.0, dot(pointProps.normal, lightDir)) * pointProps.material.color;
+        color += rejectFactor * max(0.0, dot(pointProps.normal, lightDir)) * pointProps.material.color;
         // Specular
+        vec3 refLD = reflect(-lightDir, pointProps.normal);
+        float shininess = 5/(pow(pointProps.material.roughness, 2));
+        color += rejectFactor * pow(max(dot(viewDir, refLD), 0.0), shininess) * light.color * specularCoef;
     }
     return color;
 }
