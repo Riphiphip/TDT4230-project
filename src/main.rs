@@ -4,6 +4,7 @@ extern crate nalgebra_glm as glm;
 
 mod metaballs;
 mod uniforms;
+mod lights;
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -39,20 +40,28 @@ fn main() {
             metaballs::Metaball {
                 charge_pos: [0.0, 0.0, 0.0],
                 strength: 0.3,
-                color: [1.0, 0.0, 0.0, 1.0],
+                color: [0.0, 1.0, 0.0, 1.0],
             },
             metaballs::Metaball {
                 charge_pos: [0.0, 0.0, 2.0],
                 strength: 0.5,
-                color: [1.0, 0.0, 0.0, 1.0],
+                color: [0.0, 0.0, 1.0, 1.0],
             }
-        ]
+        ],
+        point_lights: vec![
+            lights::PointLight {
+                pos: [-4.0, 5.0, 2.5],
+                color: [1.0, 1.0, 1.0],
+                intensity: 1.0,
+            }
+        ],
     };
 
     let vert_shader_src = std::fs::read_to_string("./res/shaders/main.vert").expect("Could not read vertex shader src");
     let mut frag_shader_src = std::fs::read_to_string("./res/shaders/main.frag").expect("Could not read fragment shader src");
     // "Macro" replacement
     frag_shader_src = frag_shader_src.replacen("<->n_metaballs!<->", program_uniforms.metaballs.len().to_string().as_str(), 1);
+    frag_shader_src = frag_shader_src.replacen("<->n_point_lights!<->", program_uniforms.point_lights.len().to_string().as_str(), 1);
 
     let program = glium::Program::from_source(&display, vert_shader_src.as_str(), frag_shader_src.as_str(), None).unwrap();
 

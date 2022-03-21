@@ -1,9 +1,11 @@
 use crate::glium;
 use crate::metaballs::{Metaball};
+use crate::lights::{PointLight};
 
 
 pub struct Uniforms {
     pub metaballs: Vec<Metaball>,
+    pub point_lights: Vec<PointLight>,
     pub img_plane_z: f32,
     pub camera_transform: [[f32; 4]; 4],
     pub threshold: f32,
