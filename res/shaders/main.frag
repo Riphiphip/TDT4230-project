@@ -130,6 +130,7 @@ vec3 getLocalIllumination(vec3 point, float fieldStrength){
     for (int i =0; i < nPointLights; ++i){
         PointLight light = pointLights[i];
         vec3 lightDir = normalize(light.pos - point);
+        float distToLight = length(light.pos - point);
         // Check if point is in shadow
         Ray shadowRay;
         shadowRay.dir = lightDir;
@@ -137,12 +138,15 @@ vec3 getLocalIllumination(vec3 point, float fieldStrength){
         shadowRay.length = shadowRayStepSize;
         float rejectFactor = float(castShadowRay(shadowRay));
 
+        float attenuation = 1.0/(la + lb * distToLight + lc * pow(distToLight, 2));
+        float commonCoef = rejectFactor * attenuation * light.intensity;
+
         // Diffuse
-        color += rejectFactor * max(0.0, dot(pointProps.normal, lightDir)) * pointProps.material.color;
+        color += commonCoef * max(0.0, dot(pointProps.normal, lightDir)) * pointProps.material.color;
         // Specular
         vec3 refLD = reflect(-lightDir, pointProps.normal);
         float shininess = 5/(pow(pointProps.material.roughness, 2));
-        color += rejectFactor * pow(max(dot(viewDir, refLD), 0.0), shininess) * light.color * specularCoef;
+        color += commonCoef * pow(max(dot(viewDir, refLD), 0.0), shininess) * light.color * specularCoef;
     }
     return color;
 }

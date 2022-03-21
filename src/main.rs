@@ -61,7 +61,7 @@ fn main() {
             lights::PointLight {
                 pos: [0.0, 3.0, 0.0],
                 color: [1.0, 1.0, 1.0],
-                intensity: 1.0,
+                intensity: 0.004,
             }
         ],
     };
