@@ -23,7 +23,8 @@ impl glium::uniforms::Uniforms for Uniforms {
         for i in 0..self.metaballs.len(){
             f(&format!("metaballs[{}].chargePos", i), glium::uniforms::UniformValue::Vec3(self.metaballs[i].charge_pos));
             f(&format!("metaballs[{}].strength", i), glium::uniforms::UniformValue::Float(self.metaballs[i].strength));
-            f(&format!("metaballs[{}].color", i), glium::uniforms::UniformValue::Vec4(self.metaballs[i].color));
+            f(&format!("metaballs[{}].material.color", i), glium::uniforms::UniformValue::Vec3(self.metaballs[i].material.color));
+            f(&format!("metaballs[{}].material.roughness", i), glium::uniforms::UniformValue::Float(self.metaballs[i].material.roughness));
         }
 
         for i in 0..self.point_lights.len(){

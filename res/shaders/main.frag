@@ -10,10 +10,15 @@ uniform float imgPlaneZ;
 // Matrix for transforming camera location and camera ray directions
 uniform mat4 cameraMat;
 
+struct Material {
+    vec3 color;
+    float roughness;
+};
+
 struct Metaball {
     vec3 chargePos;
     float strength;
-    vec4 color;
+    Material material;
 };
 
 // Custom "macro". Will be replaced before compilation. 
@@ -36,21 +41,29 @@ float getFieldStrength(vec3 point){
     return strength;
 }
 
-vec3 getNormal(vec3 point){
-    vec3 normal = vec3(0.0);
-    for(uint i= 0; i < nMetaballs; ++i){
-        normal += normalize(point - metaballs[i].chargePos) * metaballFalloff(metaballs[i], point);
-    }
-    return normalize(normal);
-}
+struct PointProperties {
+    float fieldStrength;
+    vec3 normal;
+    Material material;
+};
 
-vec3 getColor(vec3 point, float totalCharge){
-    vec3 color = vec3(0.0);
+PointProperties getPointProperties(vec3 point, float fieldStrength) {
+    PointProperties props;
+    props.fieldStrength = fieldStrength;
+    vec3 tmpNormal = vec3(0.0);
+
+    props.material.color = vec3(0.0);
+    props.material.roughness = 0.0;
+
     for(uint i= 0; i < nMetaballs; ++i){
-        color += vec3(metaballs[i].color) * metaballFalloff(metaballs[i], point)/totalCharge;
+        float contribution = metaballFalloff(metaballs[i], point)/fieldStrength;
+        tmpNormal += normalize(point - metaballs[i].chargePos) * contribution;
+        props.material.color += vec3(metaballs[i].material.color) * contribution;
+        props.material.roughness += metaballs[i].material.roughness * contribution;
     }
-    return color;
-}
+    props.normal = normalize(tmpNormal);
+    return props;
+};
 
 struct Ray {
     vec3 orig;
@@ -105,10 +118,12 @@ const int shininess = 8;
 const float specularCoef = 0.5;
 
 //Calculate local illumination using Phong model.
-vec3 getLocalIllumination(vec3 point, vec3 normal, float fieldStrength){
+vec3 getLocalIllumination(vec3 point, float fieldStrength){
 
     vec4 cameraPos = cameraMat * vec4(vec3(0.0), 1.0);
     vec3 viewDir = normalize(vec3(cameraPos)-point);
+
+    PointProperties pointProps = getPointProperties(point, fieldStrength);
 
     vec3 color = ambientLight * ambientCoef;
 
@@ -123,7 +138,7 @@ vec3 getLocalIllumination(vec3 point, vec3 normal, float fieldStrength){
         float rejectFactor = float(castShadowRay(shadowRay));
 
         // Diffuse
-        color += max(0.0, dot(normal, lightDir)) * getColor(point, fieldStrength);
+        color += max(0.0, dot(pointProps.normal, lightDir)) * pointProps.material.color;
         // Specular
     }
     return color;
@@ -147,8 +162,7 @@ void main() {
         vec3 testPoint = camRay.orig + camRay.dir * camRay.length;
         float fieldStrength = getFieldStrength(testPoint);
         if (fieldStrength >= threshold){
-            vec3 normal = getNormal(testPoint);
-            tmpColor = getLocalIllumination(testPoint, normal, fieldStrength);
+            tmpColor = getLocalIllumination(testPoint,fieldStrength);
             i = maxSteps;
         }
         camRay.length += rayStepSize;
