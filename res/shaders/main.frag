@@ -210,12 +210,15 @@ layout(location = 0) in vec2 uv_in;
 out vec4 color;
 
 void main() {
-    float xPerPix = 1.0 / float(screenWidth);
-    float yPerPix = 1.0 / float(screenHeight);
+    float aspectRatio = float(screenWidth)/float(screenHeight);
 
     vec2 uv = uv_in;
-    vec3 colSum = vec3(0.0);
+    uv.x *= aspectRatio;
+    
+    float xPerPix = aspectRatio / float(screenWidth);
+    float yPerPix = 1.0 / float(screenHeight);
 
+    vec3 colSum = vec3(0.0);
     uint sampleGridDim = 2;
     for (int x = 0; x < sampleGridDim; ++x){
         for (int y = 0; y < sampleGridDim; ++y){
