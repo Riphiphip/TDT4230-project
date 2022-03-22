@@ -137,7 +137,7 @@ vec3 getLocalIllumination(vec3 point, PointProperties pointProps, vec3 viewPoint
         Ray shadowRay;
         shadowRay.dir = lightDir;
         shadowRay.orig = point;
-        shadowRay.length = shadowRayStepSize;
+        shadowRay.length = shadowRayStepSize*2.0;
         float rejectFactor = float(castShadowRay(shadowRay));
 
         float attenuation = 1.0/(la + lb * distToLight + lc * pow(distToLight, 2));
@@ -216,7 +216,7 @@ void main() {
     vec2 uv = uv_in;
     vec3 colSum = vec3(0.0);
 
-    uint sampleGridDim = 1;
+    uint sampleGridDim = 2;
     for (int x = 0; x < sampleGridDim; ++x){
         for (int y = 0; y < sampleGridDim; ++y){
             vec2 tmpUV = uv + vec2(x * xPerPix, y * yPerPix);
