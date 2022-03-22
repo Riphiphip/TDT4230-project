@@ -29,7 +29,7 @@ fn main() {
         screen_width: display.get_framebuffer_dimensions().0,
         screen_height: display.get_framebuffer_dimensions().1,
         img_plane_z: 1.0,
-        camera_transform: glm::identity::<f32, 4>().into(),
+        camera_transform: glm::translation::<f32>(&glm::vec3(0.0, 0.0, -2.0)).into(),
         threshold: 10.0,
         metaballs: vec![
             metaballs::Metaball {
@@ -55,7 +55,39 @@ fn main() {
                     color: [0.0, 0.0, 0.0],
                     roughness: 2.23606,
                 },
-            }
+            },
+            metaballs::Metaball {
+                charge_pos: [-0.5, -1.0, 2.5],
+                strength: 0.5,
+                material: metaballs::Material {
+                    color: [0.0, 0.0, 0.0],
+                    roughness: 2.23606,
+                },
+            },
+            metaballs::Metaball {
+                charge_pos: [-0.5, -1.0, 1.5],
+                strength: 0.5,
+                material: metaballs::Material {
+                    color: [0.0, 0.0, 0.0],
+                    roughness: 2.23606,
+                },
+            },
+            metaballs::Metaball {
+                charge_pos: [0.5, -1.0, 2.5],
+                strength: 0.5,
+                material: metaballs::Material {
+                    color: [0.0, 0.0, 0.0],
+                    roughness: 2.23606,
+                },
+            },
+            metaballs::Metaball {
+                charge_pos: [0.5, -1.0, 1.5],
+                strength: 0.5,
+                material: metaballs::Material {
+                    color: [0.0, 0.0, 0.0],
+                    roughness: 2.23606,
+                },
+            },
         ],
         point_lights: vec![
             lights::PointLight {
