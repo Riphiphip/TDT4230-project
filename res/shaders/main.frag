@@ -117,12 +117,10 @@ const int shininess = 8;
 const float specularCoef = 0.5;
 
 //Calculate local illumination using Phong model.
-vec3 getLocalIllumination(vec3 point, float fieldStrength){
+vec3 getLocalIllumination(vec3 point, PointProperties pointProps){
 
     vec4 cameraPos = cameraMat * vec4(vec3(0.0), 1.0);
     vec3 viewDir = normalize(vec3(cameraPos)-point);
-
-    PointProperties pointProps = getPointProperties(point, fieldStrength);
 
     vec3 color = pointProps.material.color * ambientCoef;
 
@@ -168,7 +166,8 @@ void main() {
         vec3 testPoint = camRay.orig + camRay.dir * camRay.length;
         float fieldStrength = getFieldStrength(testPoint);
         if (fieldStrength >= threshold){
-            tmpColor = getLocalIllumination(testPoint,fieldStrength);
+            PointProperties pointProps = getPointProperties(testPoint, fieldStrength);
+            tmpColor = getLocalIllumination(testPoint, pointProps);
             i = maxSteps;
         }
         camRay.length += rayStepSize;
