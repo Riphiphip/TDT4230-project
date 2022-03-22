@@ -122,9 +122,9 @@ float getShininess(Material material){
 }
 
 //Calculate local illumination using Phong model.
-vec3 getLocalIllumination(vec3 point, PointProperties pointProps){
+vec3 getLocalIllumination(vec3 point, PointProperties pointProps, vec3 viewPoint){
 
-    vec4 cameraPos = cameraMat * vec4(vec3(0.0), 1.0);
+    vec3 cameraPos = viewPoint;
     vec3 viewDir = normalize(vec3(cameraPos)-point);
 
     vec3 color = pointProps.material.color * ambientCoef;
@@ -155,11 +155,11 @@ vec3 getLocalIllumination(vec3 point, PointProperties pointProps){
 
 // Add some sort of skybox later
 vec3 getBackground(Ray ray){
-    return vec3(0.0, 0.0, 0.0);
+    return vec3(0.5, 0.5, 1.0);
 }
 
-uniform float rayStepSize = 0.01;
-uniform uint maxSteps = 500;
+uniform float rayStepSize = 0.005;
+uniform uint maxSteps = 1000;
 
 vec3 castRay(Ray ray) {
     vec3 color = vec3(0.0);
@@ -191,13 +191,13 @@ vec3 castRay(Ray ray) {
             PointProperties pointProps = getPointProperties(point, fieldStrength);
             float shininess = getShininess(pointProps.material);
 
-            color += getLocalIllumination(point, pointProps) * contribCoef;
+            color += getLocalIllumination(point, pointProps, workingRay.orig) * contribCoef;
 
             contribCoef *= shininess;
 
             workingRay.dir = normalize(reflect(workingRay.dir, pointProps.normal));
             workingRay.orig = point;
-            workingRay.length = rayStepSize;
+            workingRay.length = rayStepSize*2.0;
             workingRay.remainingBounces -= 1;
         }
 
@@ -210,9 +210,21 @@ layout(location = 0) in vec2 uv_in;
 out vec4 color;
 
 void main() {
-    vec2 uv = uv_in;
-    
-    Ray camRay = getCameraRay(vec3(uv, imgPlaneZ), cameraMat, 3);
+    float xPerPix = 1.0 / float(screenWidth);
+    float yPerPix = 1.0 / float(screenHeight);
 
-    color = vec4(castRay(camRay), 1.0);
+    vec2 uv = uv_in;
+    vec3 colSum = vec3(0.0);
+
+    uint sampleGridDim = 1;
+    for (int x = 0; x < sampleGridDim; ++x){
+        for (int y = 0; y < sampleGridDim; ++y){
+            vec2 tmpUV = uv + vec2(x * xPerPix, y * yPerPix);
+            Ray camRay = getCameraRay(vec3(tmpUV, imgPlaneZ), cameraMat, 4);
+            colSum += castRay(camRay);
+        }
+    } 
+    colSum /= (sampleGridDim*sampleGridDim);
+
+    color = vec4(colSum, 1.0);
 }

@@ -37,7 +37,7 @@ fn main() {
                 strength: 0.3,
                 material: metaballs::Material {
                     color: [1.0, 0.0, 0.0],
-                    roughness: 2.0,
+                    roughness: 8.0,
                 },
             },
             metaballs::Metaball {
@@ -45,21 +45,21 @@ fn main() {
                 strength: 0.3,
                 material: metaballs::Material {
                     color: [0.0, 1.0, 0.0],
-                    roughness: 1.0,
+                    roughness: 10.0,
                 },
             },
             metaballs::Metaball {
                 charge_pos: [0.0, 0.0, 2.0],
                 strength: 0.5,
                 material: metaballs::Material {
-                    color: [0.0, 0.0, 1.0],
-                    roughness: 0.001,
+                    color: [0.0, 0.0, 0.0],
+                    roughness: 2.23606,
                 },
             }
         ],
         point_lights: vec![
             lights::PointLight {
-                pos: [0.0, 3.0, 0.0],
+                pos: [5.0, 6.0, 0.0],
                 color: [1.0, 1.0, 1.0],
                 intensity: 0.004,
             }
