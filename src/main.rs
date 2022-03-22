@@ -79,8 +79,8 @@ fn main() {
     event_loop.run(move |ev, _, control_flow |{
         use glium::Surface;
 
-        program_uniforms.metaballs[0].charge_pos[0] = (start_time.elapsed().as_secs_f32() * 1.2).sin();
-        program_uniforms.metaballs[0].charge_pos[2] = (start_time.elapsed().as_secs_f32() * 1.2).cos() + 2.0;
+        program_uniforms.metaballs[0].charge_pos[0] = (start_time.elapsed().as_secs_f32() * 1.2).sin() * 2.0;
+        program_uniforms.metaballs[0].charge_pos[2] = (start_time.elapsed().as_secs_f32() * 1.2).cos()  + 2.0;
 
         program_uniforms.metaballs[1].charge_pos[1] = (start_time.elapsed().as_secs_f32() * 1.0).cos()/2.0;
         program_uniforms.metaballs[1].charge_pos[2] = (start_time.elapsed().as_secs_f32() * 1.0).sin()/2.0 + 2.0;

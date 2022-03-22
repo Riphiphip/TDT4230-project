@@ -69,9 +69,10 @@ struct Ray {
     vec3 orig;
     vec3 dir;
     float length;
+    uint remainingBounces;
 };
 
-Ray getCameraRay(vec3 planePoint, mat4 camMat){
+Ray getCameraRay(vec3 planePoint, mat4 camMat, uint maxBounces){
     Ray camRay;
     vec4 planePointWS = camMat * vec4(planePoint, 1.0);
     vec4 cameraPointWS = camMat * vec4(vec3(0.0), 1.0);
@@ -80,6 +81,7 @@ Ray getCameraRay(vec3 planePoint, mat4 camMat){
     camRay.orig = vec3(cameraPointWS);
     camRay.dir = rayDir;
     camRay.length = 0.0;
+    camRay.remainingBounces = maxBounces;
     return camRay;
 }
 
@@ -97,8 +99,8 @@ uniform uint shadowRayMaxSteps = 100;
 
 bool castShadowRay(Ray ray){
     for(int i = 0; i < shadowRayMaxSteps; ++i){
-        vec3 testPoint = ray.orig + ray.dir * ray.length;
-        if (getFieldStrength(testPoint) >= threshold){
+        vec3 point = ray.orig + ray.dir * ray.length;
+        if (getFieldStrength(point) >= threshold){
             return false;
         }
         ray.length += shadowRayStepSize;
@@ -113,8 +115,11 @@ const float la = 0.0001;
 const float lb = 0.0001;
 const float lc = 0.0001;
 
-const int shininess = 8;
 const float specularCoef = 0.5;
+
+float getShininess(Material material){
+     return 5/(pow(material.roughness, 2));
+}
 
 //Calculate local illumination using Phong model.
 vec3 getLocalIllumination(vec3 point, PointProperties pointProps){
@@ -142,15 +147,64 @@ vec3 getLocalIllumination(vec3 point, PointProperties pointProps){
         color += commonCoef * max(0.0, dot(pointProps.normal, lightDir)) * pointProps.material.color;
         // Specular
         vec3 refLD = reflect(-lightDir, pointProps.normal);
-        float shininess = 5/(pow(pointProps.material.roughness, 2));
+        float shininess = getShininess(pointProps.material);
         color += commonCoef * pow(max(dot(viewDir, refLD), 0.0), shininess) * light.color * specularCoef;
     }
     return color;
 }
 
-uniform float rayStepSize = 0.01;
-uniform uint maxSteps = 300;
+// Add some sort of skybox later
+vec3 getBackground(Ray ray){
+    return vec3(0.0, 0.0, 0.0);
+}
 
+uniform float rayStepSize = 0.01;
+uniform uint maxSteps = 500;
+
+vec3 castRay(Ray ray) {
+    vec3 color = vec3(0.0);
+    Ray workingRay = ray;
+
+    float contribCoef = 1.0;
+
+    while (workingRay.remainingBounces > 0){
+
+        vec3 point;
+        float fieldStrength;
+        bool didHit = false;
+
+        int rayStep = 0;
+        while ((rayStep < maxSteps) && !didHit){
+            point = workingRay.orig + workingRay.dir * workingRay.length;
+            fieldStrength = getFieldStrength(point);
+            if (fieldStrength >= threshold){
+                didHit = true;
+                break; //TODO: may be unstable
+            }
+            workingRay.length += rayStepSize;
+            rayStep++;
+        }
+        if (!didHit){
+            color += getBackground(workingRay) * contribCoef;
+            workingRay.remainingBounces = 0;
+        } else {
+            PointProperties pointProps = getPointProperties(point, fieldStrength);
+            float shininess = getShininess(pointProps.material);
+
+            color += getLocalIllumination(point, pointProps) * contribCoef;
+
+            contribCoef *= shininess;
+
+            workingRay.dir = normalize(reflect(workingRay.dir, pointProps.normal));
+            workingRay.orig = point;
+            workingRay.length = rayStepSize;
+            workingRay.remainingBounces -= 1;
+        }
+
+    }
+
+    return color;
+}
 
 layout(location = 0) in vec2 uv_in;
 out vec4 color;
@@ -158,21 +212,7 @@ out vec4 color;
 void main() {
     vec2 uv = uv_in;
     
-    Ray camRay = getCameraRay(vec3(uv, imgPlaneZ), cameraMat);
+    Ray camRay = getCameraRay(vec3(uv, imgPlaneZ), cameraMat, 3);
 
-    vec3 tmpColor = vec3(0.5, 0.5, 1.0);
-    uint i = 0;
-    while (i < maxSteps){
-        vec3 testPoint = camRay.orig + camRay.dir * camRay.length;
-        float fieldStrength = getFieldStrength(testPoint);
-        if (fieldStrength >= threshold){
-            PointProperties pointProps = getPointProperties(testPoint, fieldStrength);
-            tmpColor = getLocalIllumination(testPoint, pointProps);
-            i = maxSteps;
-        }
-        camRay.length += rayStepSize;
-        i++;
-    }
-
-    color = vec4(tmpColor, 1.0);
+    color = vec4(castRay(camRay), 1.0);
 }
