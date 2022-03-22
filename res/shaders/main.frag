@@ -106,8 +106,7 @@ bool castShadowRay(Ray ray){
     return true;
 }
 
-uniform vec3 ambientLight = vec3(1.0);
-uniform float ambientCoef = 0.1;
+uniform float ambientCoef = 0.05;
 uniform float diffuseCoef = 1.0;
 
 const float la = 0.0001;
@@ -125,7 +124,7 @@ vec3 getLocalIllumination(vec3 point, float fieldStrength){
 
     PointProperties pointProps = getPointProperties(point, fieldStrength);
 
-    vec3 color = ambientLight * ambientCoef;
+    vec3 color = pointProps.material.color * ambientCoef;
 
     for (int i =0; i < nPointLights; ++i){
         PointLight light = pointLights[i];
