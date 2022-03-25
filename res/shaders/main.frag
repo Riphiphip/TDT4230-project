@@ -153,9 +153,31 @@ vec3 getLocalIllumination(vec3 point, PointProperties pointProps, vec3 viewPoint
     return color;
 }
 
-// Add some sort of skybox later
+
+// For texture mapping spheres
+const vec2 invAtan = vec2(0.1591, 0.3183);
+vec2 getSphereUV(vec3 normal)
+{
+    vec2 uv = vec2(atan(normal.z, normal.x), asin(normal.y));
+    uv *= invAtan;
+    uv += 0.5;
+    return uv;
+}
+
+uniform sampler2D bgTex;
+uniform float bgRayStepSize = 0.2;
+uniform float skySphereRad = 20.0;
+
 vec3 getBackground(Ray ray){
-    return vec3(0.5, 0.5, 1.0);
+    vec3 rayEnd = ray.orig + ray.dir*ray.length;
+    while (length(rayEnd) < skySphereRad){
+        ray.length += bgRayStepSize;
+        rayEnd = ray.orig + ray.dir*ray.length;
+    }
+    vec3 normal = normalize(rayEnd);
+    vec2 uv = getSphereUV(normal);
+
+    return vec3(texture2D(bgTex, uv));
 }
 
 uniform float rayStepSize = 0.005;
@@ -186,7 +208,7 @@ vec3 castRay(Ray ray) {
         }
         if (!didHit){
             color += getBackground(workingRay) * contribCoef;
-            workingRay.remainingBounces = 0;
+            contribCoef = 0.0;
         } else {
             PointProperties pointProps = getPointProperties(point, fieldStrength);
             float shininess = getShininess(pointProps.material);
@@ -198,8 +220,8 @@ vec3 castRay(Ray ray) {
             workingRay.dir = normalize(reflect(workingRay.dir, pointProps.normal));
             workingRay.orig = point;
             workingRay.length = rayStepSize*2.0;
-            workingRay.remainingBounces -= 1;
         }
+            workingRay.remainingBounces -= 1;
 
     }
 
