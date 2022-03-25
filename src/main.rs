@@ -29,7 +29,9 @@ fn main() {
         screen_width: display.get_framebuffer_dimensions().0,
         screen_height: display.get_framebuffer_dimensions().1,
         img_plane_z: 1.0,
-        camera_transform: glm::translation::<f32>(&glm::vec3(0.0, 0.0, -2.0)).into(),
+        camera_pos: glm::vec3(0.0, 0.0, -1.0),
+        camera_rot_axis: glm::vec3(0.0, 1.0, 0.0),
+        camera_rot_angle: 0.0,
         threshold: 10.0,
         metaballs: vec![
             metaballs::Metaball {
@@ -119,6 +121,13 @@ fn main() {
 
         program_uniforms.metaballs[1].charge_pos[1] = (start_time.elapsed().as_secs_f32() * 1.0).cos()/2.0;
         program_uniforms.metaballs[1].charge_pos[2] = (start_time.elapsed().as_secs_f32() * 1.0).sin()/2.0 + 2.0;
+
+        let orbit_angle = start_time.elapsed().as_secs_f32()/2.0;
+        let phi = orbit_angle - glm::half_pi::<f32>();
+        let orbit_radius = 3.0;
+
+        program_uniforms.camera_pos = glm::vec3(orbit_radius * phi.cos(), 0.0, orbit_radius* phi.sin()+2.0);
+        program_uniforms.camera_rot_angle = -orbit_angle;
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
