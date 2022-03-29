@@ -185,7 +185,7 @@ vec3 getBackground(Ray ray){
     return vec3(texture2D(bgTex, uv));
 }
 
-uniform float rayStepSize = 0.005;
+uniform float rayStepSize = 0.008;
 uniform uint maxSteps = 1000;
 
 vec3 castRay(Ray ray) {
