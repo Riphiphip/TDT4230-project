@@ -41,6 +41,11 @@ float getFieldStrength(vec3 point){
     return strength;
 }
 
+
+float getMaxSafeStep(float fieldStrength){
+    return sqrt(sqrt(abs(maxCharge/fieldStrength)));
+}
+
 struct PointProperties {
     float fieldStrength;
     vec3 normal;
@@ -203,6 +208,7 @@ vec3 castRay(Ray ray) {
                 didHit = true;
                 break; //TODO: may be unstable
             }
+            float stepSize = max(getMaxSafeStep(fieldStrength), rayStepSize);
             workingRay.length += rayStepSize;
             rayStep++;
         }
