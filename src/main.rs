@@ -17,7 +17,7 @@ fn main() {
     use glium::glutin;
 
     let event_loop = glutin::event_loop::EventLoop::new();
-    let window_builder = glutin::window::WindowBuilder::new();
+    let window_builder = glutin::window::WindowBuilder::new().with_inner_size(glutin::dpi::PhysicalSize{width:100, height:100});
     let context_builder = glutin::ContextBuilder::new();
     let display = glium::Display::new(window_builder, context_builder, &event_loop).unwrap();
     
@@ -114,7 +114,7 @@ fn main() {
     };
 
     let vert_shader_src = std::fs::read_to_string("./res/shaders/main.vert").expect("Could not read vertex shader src");
-    let mut frag_shader_src = std::fs::read_to_string("./res/shaders/main.frag").expect("Could not read fragment shader src");
+    let mut frag_shader_src = std::fs::read_to_string("./res/shaders/rayTrace.frag").expect("Could not read fragment shader src");
     // "Macro" replacement
     frag_shader_src = frag_shader_src.replacen("<->n_metaballs!<->", program_uniforms.metaballs.len().to_string().as_str(), 1);
     frag_shader_src = frag_shader_src.replacen("<->n_point_lights!<->", program_uniforms.point_lights.len().to_string().as_str(), 1);
