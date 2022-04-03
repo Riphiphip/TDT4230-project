@@ -17,7 +17,7 @@ fn main() {
     use glium::glutin;
 
     let event_loop = glutin::event_loop::EventLoop::new();
-    let window_builder = glutin::window::WindowBuilder::new().with_inner_size(glutin::dpi::PhysicalSize{width:100, height:100});
+    let window_builder = glutin::window::WindowBuilder::new().with_inner_size(glutin::dpi::PhysicalSize{width:1920, height:1200});
     let context_builder = glutin::ContextBuilder::new();
     let display = glium::Display::new(window_builder, context_builder, &event_loop).unwrap();
     
@@ -26,7 +26,7 @@ fn main() {
     let canvas_indicies: [u16; 6] = [0, 1, 2, 2, 3, 0];
     let indicies = glium::index::IndexBuffer::new(&display, glium::index::PrimitiveType::TrianglesList, &canvas_indicies).unwrap();
     
-    let background_tex_image = image::io::Reader::open("./res/textures/Free Panorama in Park (quarter res).jpg")
+    let background_tex_image = image::io::Reader::open("./res/textures/Free Panorama in Park.jpg")
         .expect("Could not open background texture file")
         .with_guessed_format()
         .expect("Could not determine image format for background texture")
@@ -123,19 +123,28 @@ fn main() {
 
     let start_time = std::time::Instant::now();
 
+    let framerate = 60; // In FPS
+    let animation_time = 10; // In seconds
+    let frame_count = framerate * animation_time;
+
+    let mut frame_num = 0;
+    
     event_loop.run(move |ev, _, control_flow |{
         use glium::Surface;
 
         program_uniforms.screen_width= display.get_framebuffer_dimensions().0;
         program_uniforms.screen_height= display.get_framebuffer_dimensions().1;
 
-        program_uniforms.metaballs[0].charge_pos[0] = (start_time.elapsed().as_secs_f32() * 1.2).sin() * 2.0;
-        program_uniforms.metaballs[0].charge_pos[2] = (start_time.elapsed().as_secs_f32() * 1.2).cos()  + 2.0;
+        // let frame_time = start_time.elapsed().as_secs_f32();
+        let frame_time = std::time::Duration::from_nanos(frame_num * 16_666_667).as_secs_f32();
 
-        program_uniforms.metaballs[1].charge_pos[1] = (start_time.elapsed().as_secs_f32() * 1.0).cos()/2.0;
-        program_uniforms.metaballs[1].charge_pos[2] = (start_time.elapsed().as_secs_f32() * 1.0).sin()/2.0 + 2.0;
+        program_uniforms.metaballs[0].charge_pos[0] = (frame_time * 1.2).sin() * 2.0;
+        program_uniforms.metaballs[0].charge_pos[2] = (frame_time * 1.2).cos()  + 2.0;
 
-        let orbit_angle = start_time.elapsed().as_secs_f32()/2.0;
+        program_uniforms.metaballs[1].charge_pos[1] = (frame_time * 1.0).cos()/2.0;
+        program_uniforms.metaballs[1].charge_pos[2] = (frame_time * 1.0).sin()/2.0 + 2.0;
+
+        let orbit_angle = frame_time/2.0;
         let phi = orbit_angle - glm::half_pi::<f32>();
         let orbit_radius = 4.0;
 
@@ -147,8 +156,20 @@ fn main() {
         target.draw(&canvas_buffer, &indicies, &program, &program_uniforms, &Default::default()).unwrap();
         target.finish().unwrap();
 
-        let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
-        *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
+        let image: glium::texture::RawImage2d<'_, u8> = display.read_front_buffer().unwrap();
+        let image = image::ImageBuffer::from_raw(image.width, image.height, image.data.into_owned()).unwrap();
+        let image = image::DynamicImage::ImageRgba8(image).flipv();
+        image.save(format!("./frames/{}.png", frame_num)).unwrap();
+        
+        // Stop rendering when desired animation length is reached
+        frame_num += 1;
+        if frame_num >= frame_count {
+            *control_flow = glutin::event_loop::ControlFlow::Exit;
+            return
+        }
+
+        // let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
+        // *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
         match ev {
             glutin::event::Event::WindowEvent {event, ..} => match event {
                 glutin::event::WindowEvent::CloseRequested => {
