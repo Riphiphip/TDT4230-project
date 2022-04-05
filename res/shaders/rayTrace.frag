@@ -61,7 +61,7 @@ PointProperties getPointProperties(vec3 point, float fieldStrength) {
     props.material.roughness = 0.0;
 
     for(uint i= 0; i < nMetaballs; ++i){
-        float contribution = metaballFalloff(metaballs[i], point)/fieldStrength;
+        float contribution = max(metaballFalloff(metaballs[i], point)/fieldStrength, 0.0);
         tmpNormal += normalize(point - metaballs[i].chargePos) * contribution;
         props.material.color += vec3(metaballs[i].material.color) * contribution;
         props.material.roughness += metaballs[i].material.roughness * contribution;

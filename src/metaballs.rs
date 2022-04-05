@@ -10,7 +10,7 @@ pub struct Material {
     pub roughness: f32,
 }
 
-type AnimateFn<T> = fn(object: &mut T, frame_time:f32, number:f32);
+type AnimateFn<T> = fn(object: &mut T, frame_time:f32);
 
 pub struct Metaball {
     pub charge_pos: [f32; 3],
@@ -22,6 +22,6 @@ pub struct Metaball {
 
 impl Animatable for Metaball {
     fn animate(&mut self, frame_time: f32){
-        (self.anim_func)(self, frame_time, self.number);
+        (self.anim_func)(self, frame_time);
     }
 }
