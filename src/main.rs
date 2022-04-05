@@ -26,7 +26,7 @@ fn main() {
     let canvas_indicies: [u16; 6] = [0, 1, 2, 2, 3, 0];
     let indicies = glium::index::IndexBuffer::new(&display, glium::index::PrimitiveType::TrianglesList, &canvas_indicies).unwrap();
     
-    let background_tex_image = image::io::Reader::open("./res/textures/Free Panorama in Park.jpg")
+    let background_tex_image = image::io::Reader::open("./res/textures/Free Panorama in Park (quarter res).jpg")
         .expect("Could not open background texture file")
         .with_guessed_format()
         .expect("Could not determine image format for background texture")
@@ -42,68 +42,11 @@ fn main() {
         screen_height: display.get_framebuffer_dimensions().1,
         background_texture: bg_tex,
         img_plane_z: 1.0,
-        camera_pos: glm::vec3(0.0, 0.0, -1.0),
-        camera_rot_axis: glm::vec3(0.0, 1.0, 0.0),
-        camera_rot_angle: 0.0,
+        camera_pos: glm::vec3(0.0, 2.0, -1.0),
+        camera_rot_axis: glm::vec3(1.0, 0.0, 0.0),
+        camera_rot_angle: glm::pi::<f32>()/4.0,
         threshold: 10.0,
-        metaballs: vec![
-            metaballs::Metaball {
-                charge_pos: [0.0, 0.0, 0.0],
-                strength: 0.3,
-                material: metaballs::Material {
-                    color: [1.0, 0.0, 0.0],
-                    roughness: 8.0,
-                },
-            },
-            metaballs::Metaball {
-                charge_pos: [0.0, 0.0, 0.0],
-                strength: 0.3,
-                material: metaballs::Material {
-                    color: [0.0, 0.0, 1.0],
-                    roughness: 10.0,
-                },
-            },
-            metaballs::Metaball {
-                charge_pos: [0.0, 0.0, 2.0],
-                strength: 0.5,
-                material: metaballs::Material {
-                    color: [0.0, 0.0, 0.0],
-                    roughness: 2.23606,
-                },
-            },
-            metaballs::Metaball {
-                charge_pos: [-0.5, -1.0, 2.5],
-                strength: 0.5,
-                material: metaballs::Material {
-                    color: [0.0, 0.0, 0.0],
-                    roughness: 2.23606,
-                },
-            },
-            metaballs::Metaball {
-                charge_pos: [-0.5, -1.0, 1.5],
-                strength: 0.5,
-                material: metaballs::Material {
-                    color: [0.0, 0.0, 0.0],
-                    roughness: 2.23606,
-                },
-            },
-            metaballs::Metaball {
-                charge_pos: [0.5, -1.0, 2.5],
-                strength: 0.5,
-                material: metaballs::Material {
-                    color: [0.0, 0.0, 0.0],
-                    roughness: 2.23606,
-                },
-            },
-            metaballs::Metaball {
-                charge_pos: [0.5, -1.0, 1.5],
-                strength: 0.5,
-                material: metaballs::Material {
-                    color: [0.0, 0.0, 0.0],
-                    roughness: 2.23606,
-                },
-            },
-        ],
+        metaballs: vec![],
         point_lights: vec![
             lights::PointLight {
                 pos: [5.0, 6.0, 0.0],
@@ -112,6 +55,42 @@ fn main() {
             }
         ],
     };
+
+    for i in 0..8 {
+        let metaball = metaballs::Metaball {
+            charge_pos: [0.0, -1.0, 0.0],
+            strength: 0.3,
+            material: metaballs::Material {
+                color: [1.0, 0.0, 0.0],
+                roughness: 8.0,
+            },
+            number: i as f32,
+            anim_func: |mb, frame_time, number|{
+                let time = f32::min(f32::max(0.0, frame_time - number * glm::two_pi::<f32>()/8.0), 4.0 * glm::pi::<f32>());
+                mb.charge_pos[0] = time.sin() - 0.5;
+                mb.charge_pos[2] = time.cos() + 2.0;
+            },
+        };
+        program_uniforms.metaballs.push(metaball);
+    }
+
+    for i in 0..8 {
+        let metaball = metaballs::Metaball {
+            charge_pos: [0.0, -1.0, 1.5],
+            strength: 0.3,
+            material: metaballs::Material {
+                color: [0.0, 0.0, 0.0],
+                roughness: 2.23606,
+            },
+            number: i as f32,
+            anim_func: |mb, frame_time, number|{
+                let time = f32::min(f32::max(0.0, frame_time - number * glm::two_pi::<f32>()/8.0), 4.0 * glm::pi::<f32>());
+                mb.charge_pos[0] = time.sin() + 0.5;
+                mb.charge_pos[1] = time.cos() - 1.0;
+            },
+        };
+        program_uniforms.metaballs.push(metaball);
+    }
 
     let vert_shader_src = std::fs::read_to_string("./res/shaders/main.vert").expect("Could not read vertex shader src");
     let mut frag_shader_src = std::fs::read_to_string("./res/shaders/rayTrace.frag").expect("Could not read fragment shader src");
@@ -123,7 +102,7 @@ fn main() {
 
     let start_time = std::time::Instant::now();
 
-    let framerate = 60; // In FPS
+    let framerate = 24; // In FPS
     let animation_time = 10; // In seconds
     let frame_count = framerate * animation_time;
 
@@ -137,19 +116,11 @@ fn main() {
 
         // let frame_time = start_time.elapsed().as_secs_f32();
         let frame_time = std::time::Duration::from_nanos(frame_num * 16_666_667).as_secs_f32();
-
-        program_uniforms.metaballs[0].charge_pos[0] = (frame_time * 1.2).sin() * 2.0;
-        program_uniforms.metaballs[0].charge_pos[2] = (frame_time * 1.2).cos()  + 2.0;
-
-        program_uniforms.metaballs[1].charge_pos[1] = (frame_time * 1.0).cos()/2.0;
-        program_uniforms.metaballs[1].charge_pos[2] = (frame_time * 1.0).sin()/2.0 + 2.0;
-
-        let orbit_angle = frame_time/2.0;
-        let phi = orbit_angle - glm::half_pi::<f32>();
-        let orbit_radius = 4.0;
-
-        program_uniforms.camera_pos = glm::vec3(orbit_radius * phi.cos(), 1.0, orbit_radius* phi.sin()+2.0);
-        program_uniforms.camera_rot_angle = -orbit_angle;
+        
+        use metaballs::Animatable;
+        for mb in &mut program_uniforms.metaballs{
+            mb.animate(frame_time);
+        }
 
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
