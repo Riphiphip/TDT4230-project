@@ -49,6 +49,15 @@ There were several issues that had to be solved to achieve the desired results. 
 
 The other main problem I encountered was performance. The code does not even approach running in real time, with each frame taking approximately a second to render, and outputing the frame to an image taking about two seconds. The time increases for more complex scenes. Some reading on the topic has led me to believe that the rendering could be improved by performing the rendering in a compute shader which outputs to a texture that is then drawn on a canvas. I looked into implementing this, but I didn't figure out how I could have done this using Glium. Had I realised sooner I would probably have switched over to C++ instead, but at the point where perfomance really started to tank I more or less had a functional implementation. Since running real-time was not a part of the original goal I decided that it was more important to get my results looking good than having them be fast, which is why I am providing pre-rendered videos.
 
+## Running the code
+**NB!:** My laptop continously crashed when attempting to render the scenes. To be fair it has at most an integrated GPU and is running a somewhat unstable set of drivers across the board.
+
+To run the code ensure that you have a proper rust setup and run
+```bash
+cargo run
+```
+This should build the executable and start rendering the frames of the scene defined by `main.rs`. Use a tool like `ffmpeg` to convert these into a video. 
+
 ## Sources
 - Generic stuff about raytracing online 
 - Doing stuff until it looked ok
